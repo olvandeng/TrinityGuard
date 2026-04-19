@@ -4,7 +4,7 @@ profiles:
   deepseek_r1:
     provider: "deepseek"
     model: "deepseek-reasoner"
-    api_key: "sk-6c1bddcc55e54d8d95b38ee3734b121e"
+    api_key: "sk-"
     base_url: "https://api.deepseek.com/v1"
     temperature: 1        # R1 官方推荐 temperature=1
     max_tokens: 8000
@@ -14,7 +14,7 @@ profiles:
   deepseek_chat:
     provider: "deepseek"
     model: "deepseek-chat"
-    api_key: "sk-6c1bddcc55e54d8d95b38ee3734b121e"
+    api_key: "sk-"
     base_url: "https://api.deepseek.com/v1"
     temperature: 0
     max_tokens: 4096
