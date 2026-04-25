@@ -30,7 +30,7 @@ from .llm_config import (
     LLMConfig as LLMConfigNew,
     MASLLMConfig,
     MonitorLLMConfig,
-    ConfigNotFoundError,
+#    ConfigNotFoundError,
     load_llm_config,
     get_llm_config,
     reset_llm_config,
@@ -55,7 +55,7 @@ __all__ = [
     "MonitorError",
     "ConfigurationError",
     "LLMError",
-    # Config
+    "Config",
     "TrinitySafetyConfig",
     "LLMConfig",
     "LoggingConfig",

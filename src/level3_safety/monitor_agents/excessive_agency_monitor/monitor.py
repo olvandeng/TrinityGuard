@@ -35,7 +35,8 @@ class ExcessiveAgencyMonitor(BaseMonitorAgent):
         prompt_file = Path(__file__).parent / "system_prompt.txt"
         self.llm_judge = LLMJudge(
             risk_type="excessive_agency",
-            system_prompt_file=prompt_file
+            system_prompt_file=prompt_file,
+            monitor_name="excessive_agency_monitor",
         )
 
         self.high_risk_tools = ["delete", "remove", "drop", "send", "execute", "run"]
