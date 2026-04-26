@@ -351,6 +351,7 @@ def create_ag2_mas_from_config(config: Dict) -> AG2MAS:
         # Supported formats:
         #   "tools": ["skill_security_scan"]
         #   "tools": [{"tool": "skill_security_scan", "name": "...", "description": "..."}]
+        #   "tools": [{"tool": "mcp", "connector": <MCPConnector instance>, "executor_agent": <agent>}]
         tools = agent_config.get("tools") or []
         if tools:
             if not agent_config.get("llm_config"):
@@ -376,6 +377,30 @@ def create_ag2_mas_from_config(config: Dict) -> AG2MAS:
                         assistant_agent=agent,
                         name=tool_params.get("name", "skill_security_scan"),
                         description=tool_params.get("description"),
+                    )
+
+                elif tool_id == "mcp":
+                    # MCP 工具注册：将 MCPConnector 暴露的工具挂载到 agent
+                    # tool_params 格式：
+                    #   {
+                    #     "tool": "mcp",
+                    #     "connector": <已 start() 的 MCPConnector 实例>,
+                    #     "executor_agent": <可选，执行 agent（默认同 assistant）>,
+                    #     "audit_callback": <可选，调用审计回调>,
+                    #   }
+                    from .tools.mcp import attach_mcp_tools
+
+                    connector = tool_params.get("connector")
+                    if connector is None:
+                        raise ValueError(
+                            f"Agent '{agent_config['name']}' MCP tool 配置缺少 'connector' 参数。"
+                        )
+
+                    attach_mcp_tools(
+                        connector=connector,
+                        assistant_agent=agent,
+                        executor_agent=tool_params.get("executor_agent"),
+                        audit_callback=tool_params.get("audit_callback"),
                     )
 
         agents.append(agent)

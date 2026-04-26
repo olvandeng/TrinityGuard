@@ -68,3 +68,6 @@ config/mas_llm_config.yaml
 OAI_CONFIG_LIST.json
 config/autogen_config_list.json
 .env
+pyvenv.cfg
+bin/
+lib64
