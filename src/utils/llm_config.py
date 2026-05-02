@@ -49,7 +49,7 @@ class LLMProfile:
         # ⭐ 修复：独立判断 price，而不是 elif
         if self.price:
             config["price"] = self.price
-        print(f"LLMProfile.to_ag2_config() generated config: {config}")
+        # print(f"LLMProfile.to_ag2_config() generated config: {config}")
         return config
 
 

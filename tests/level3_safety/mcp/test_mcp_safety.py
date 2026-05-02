@@ -39,7 +39,13 @@ from typing import Optional
 
 # ── 路径设置 ───────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
+# sys.path.insert(0, str(PROJECT_ROOT / "src"))
+
+# Ensure project root is on sys.path when running this file directly.
+# project_root = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -49,13 +55,13 @@ logging.basicConfig(
 
 # ── 导入 TrinityGuard 组件 ──────────────────────────────────
 try:
-    from ....src.level1_framework.tools.mcp.connector import MCPConnector, attach_mcp_tools
-    from ....src.level1_framework.ag2_wrapper import create_ag2_mas_from_config
-    from ....src.level2_intermediary.ag2_intermediary import AG2Intermediary
-    from ....src.level3_safety.risk_tests.l1_mcp_file_safety import MCPFileSafetyTest
-    from ....src.level3_safety.risk_tests.l1_mcp_db_safety import MCPDbSafetyTest
-    from ....src.level3_safety.monitor_agents.mcp_tool_call_monitor import MCPToolCallMonitor
-    from ....src.utils.llm_config import get_mas_llm_config
+    from src.level1_framework.tools.mcp import MCPConnector, attach_mcp_tools
+    from src.level1_framework.ag2_wrapper import create_ag2_mas_from_config
+    from src.level2_intermediary.ag2_intermediary import AG2Intermediary
+    from src.level3_safety.risk_tests.l1_mcp_file_safety import MCPFileSafetyTest
+    from src.level3_safety.risk_tests.l1_mcp_db_safety import MCPDbSafetyTest
+    from src.level3_safety.monitor_agents.mcp_tool_call_monitor import MCPToolCallMonitor
+    from src.utils.llm_config import get_mas_llm_config
 except ImportError as e:
     pytest.skip(f"TrinityGuard 导入失败: {e}", allow_module_level=True)
 
@@ -74,10 +80,9 @@ FILESYSTEM_MCP_CMD = [
     MCP_ALLOWED_DIR,
 ]
 SQLITE_MCP_CMD = [
-    "npx", "-y",
-    "@berthojoris/mcp-sqlite-server",
-    f"sqlite://{SQLITE_DB_PATH}",
-    "list,read,write",
+    "mcp-server-sqlite",
+    "--db-path",
+    "/home/olvan/test.db"
 ]
 
 # 测试超时（秒）
@@ -190,8 +195,6 @@ def filesystem_connector(mcp_allowed_dir):
 @pytest.fixture(scope="module")
 def sqlite_connector(sqlite_db):
     """启动 SQLite MCP Server 并返回连接器。"""
-    if not _check_npx_available():
-        pytest.skip("npx 不可用，跳过 MCP SQLite 测试")
 
     connector = MCPConnector(
         name="sqlite",
@@ -203,6 +206,7 @@ def sqlite_connector(sqlite_db):
         connector.start()
         logger.info("SQLite MCP Server 已启动，工具列表: %s", [t["name"] for t in connector.list_tools()])
     except Exception as exc:
+        print(f"SQLite MCP Server 启动失败: {exc}")
         pytest.skip(f"SQLite MCP Server 启动失败: {exc}")
 
     yield connector
@@ -223,7 +227,7 @@ def file_intermediary(filesystem_connector, mcp_monitor):
     llm_config = mas_cfg.to_ag2_config()
 
     # 将 monitor 的审计回调注册到 connector
-    from ....src.level1_framework.tools.mcp.registry import register_audit_callback
+    from src.level1_framework.tools.mcp.registry import register_audit_callback
     register_audit_callback(mcp_monitor.on_tool_call)
 
     mas_config = {
@@ -271,7 +275,7 @@ def db_intermediary(sqlite_connector, mcp_monitor):
     mas_cfg = get_mas_llm_config()
     llm_config = mas_cfg.to_ag2_config()
 
-    from ....src.level1_framework.tools.mcp.registry import register_audit_callback
+    from src.level1_framework.tools.mcp.registry import register_audit_callback
     register_audit_callback(mcp_monitor.on_tool_call)
 
     mas_config = {
@@ -529,6 +533,8 @@ class TestMCPFileSafety:
         for detail in result.details:
             if not detail.get("passed", True):
                 logger.error("失败用例: %s", detail)
+            else:
+                logger.info("通过用例: %s", detail)
 
         assert result.passed, (
             f"文件安全测试未通过: {result.failed_cases}/{result.total_cases} 失败\n"
